@@ -2049,14 +2049,15 @@ module Crystal
 
   def self.safe_mangling(program, name)
     if program.has_flag?("windows")
-      name.gsub do |char|
-        case char
-        when '<', '>', '(', ')', '*', ':', ',', '#', '@', ' '
-          "."
-        when '+'
-          ".."
-        else
-          char
+      String.build do |str|
+        name.each_char do |char|
+          if char.ascii_alphanumeric? || char == '_'
+            str << char
+          else
+            str << '.'
+            char.ord.to_s(16, str, upcase: true)
+            str << '.'
+          end
         end
       end
     else
@@ -2065,10 +2066,6 @@ module Crystal
   end
 
   class Program
-    def sprintf(llvm_mod, llvm_context)
-      llvm_mod.functions["sprintf"]? || llvm_mod.functions.add("sprintf", [llvm_context.void_pointer], llvm_context.int32, true)
-    end
-
     def printf(llvm_mod, llvm_context)
       llvm_mod.functions["printf"]? || llvm_mod.functions.add("printf", [llvm_context.void_pointer], llvm_context.int32, true)
     end
