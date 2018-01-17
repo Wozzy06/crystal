@@ -2228,6 +2228,31 @@ module Crystal
         return false
       end
 
+      # This is for foo.[bar] = baz
+      if node.name == "[]=" && @token.type == :"["
+        write "["
+        next_token_skip_space_or_newline
+        args = node.args
+        last_arg = args.pop
+        format_args args, true, node.named_args
+        write_token :"]"
+        skip_space_or_newline
+        write " ="
+        next_token_skip_space
+        accept_assign_value_after_equals last_arg
+        return false
+      end
+
+      # This is for foo.[] = bar
+      if node.name == "[]=" && @token.type == :"[]"
+        write_token :"[]"
+        next_token_skip_space_or_newline
+        write " ="
+        next_token_skip_space
+        accept_assign_value_after_equals node.args.last
+        return false
+      end
+
       current_multiline_call_indent = @multiline_call_indent
 
       assignment = node.name.ends_with?('=') && node.name.chars.any?(&.ascii_letter?)
@@ -2405,8 +2430,8 @@ module Crystal
                 write " "
               end
             end
-            skip_space_or_newline
           end
+          skip_space_or_newline
         end
       end
 
@@ -3510,19 +3535,24 @@ module Crystal
 
       write_token " ", :"="
       skip_space
-      if @token.type == :NEWLINE && node.values.size == 1
+      if @token.type == :NEWLINE
         next_token_skip_space_or_newline
         write_line
-        write_indent(@indent + 2, node.values.first)
+        if node.values.size == 1
+          write_indent(@indent + 2, node.values.first)
+          return false
+        else
+          write_indent(@indent + 2)
+        end
       else
         write " "
-        format_mutli_assign_values node.values
       end
+      format_multi_assign_values node.values
 
       false
     end
 
-    def format_mutli_assign_values(values)
+    def format_multi_assign_values(values)
       if values.size == 1
         accept_assign_value values.first
       else

@@ -344,6 +344,7 @@ describe Crystal::Formatter do
   assert_format "a = case 1\nwhen 2\n3\nelse\n4\nend", "a = case 1\n    when 2\n      3\n    else\n      4\n    end"
   assert_format "a = \nif 1\n2\nend", "a =\n  if 1\n    2\n  end"
   assert_format "a, b = \nif 1\n2\nend", "a, b =\n  if 1\n    2\n  end"
+  assert_format "a = b = 1\na, b =\n  b, a"
 
   assert_format %(require   "foo"), %(require "foo")
 
@@ -900,6 +901,8 @@ describe Crystal::Formatter do
 
   assert_format "foo.[]"
   assert_format "foo.[1]"
+  assert_format "foo.[] = 1"
+  assert_format "foo.[1, 2] = 3"
 
   assert_format "@foo : Int32 # comment\n\ndef foo\nend"
   assert_format "getter foo # comment\n\ndef foo\nend"
@@ -1094,6 +1097,7 @@ describe Crystal::Formatter do
   assert_format "1 \\\nrescue 2", "1 \\\n  rescue 2"
   assert_format "1 \\\nensure 2", "1 \\\n  ensure 2"
   assert_format "foo bar, \\\nbaz", "foo bar,\n  baz"
+  assert_format "x 1, \\\n  2", "x 1,\n  2"
 
   assert_format "alias X = ((Y, Z) ->)"
 
